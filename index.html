@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Red Light Green Light Game</title>
+  <style>
+    body { font-family: 'Century Gothic', Arial, sans-serif; background: #e7f4fa; display: flex; flex-direction: column; align-items: center; padding: 30px; }
+    .game-container { background: #fff; border-radius: 18px; box-shadow: 0 4px 18px #b5d4ea55; max-width: 570px; width: 100%; padding: 36px 30px 20px 30px; margin: 20px 0; text-align: center; }
+    .prompt { font-size: 1.5em; min-height: 2.2em; margin: 22px 0 12px 0; }
+    .flashcard { font-size: 1.2em; margin: 20px 0 10px 0; }
+    .btn-group { display: flex; justify-content: center; gap: 18px; margin: 10px 0 20px 0; }
+    .color-btn, .action-btn { border: none; border-radius: 32px; min-width: 75px; padding: 18px 20px; font-size: 1.15em; font-weight: bold; cursor: pointer; transition: background 0.1s, transform 0.1s; outline: none; box-shadow: 0 2px 6px #0002;}
+    .color-btn.yellow { background: #ffd900; color: #5d5900; }
+    .color-btn.green { background: #41b65e; color: #fff; }
+    .color-btn.red { background: #e74c3c; color: #fff; }
+    .action-btn { background: #7bb6ec; color: #fff; }
+    .action-btn:hover { background: #55a4e0; }
+    .score { font-size: 1.1em; margin: 16px 0 8px 0; }
+    .winner { font-size: 1.25em; color: #208b53; margin-top: 14px; font-weight: bold; }
+    .team-box { margin-top: 10px; font-size: 1.09em;}
+  </style>
+</head>
+<body>
+  <h1>Red Light Green Light Game</h1>
+  <div class="game-container">
+    <div id="prompt" class="prompt"></div>
+    <div id="flashcard" class="flashcard"></div>
+    <div class="btn-group" id="btns"></div>
+    <div id="score" class="score"></div>
+    <div id="winner" class="winner"></div>
+    <div id="team-box" class="team-box"></div>
+  </div>
+
+<script>
+const lessonOneGame = [
+["yellow", "There is a baby.", "Hay un bebé."],
+["green", "There is a baby.", "Hay un bebé."],
+["yellow", "There is a mom.", "Hay una mamá."],
+["green", "There is a mom.", "Hay una mamá."],
+["green", "There is a baby.", "Hay un bebé."],
+["red", "one", "uno"],
+["green", "There is a mom.", "Hay una mamá."],
+["yellow", "There is a dad.", "Hay un papá."],
+["green", "There is a dad.", "Hay un papá."],
+["green", "There is a baby.", "Hay un bebé."],
+["red", "two", "dos"],
+["green", "There is a dad.", "Hay un papá."],
+["green", "There is a mom.", "Hay una mamá."],
+["green", "three", "tres"],
+["yellow", "There are two princesses.", "Hay dos princesas."],
+["green", "There are two princesses.", "Hay dos princesas."],
+["green", "There is a dad.", "Hay un papá."],
+["red", "four", "cuatro"],
+["green", "There are two princesses.", "Hay dos princesas."],
+["red", "There is a baby.", "Hay un bebé."],
+["yellow", "There are three robots.", "Hay tres robots."],
+["green", "There are three robots.", "Hay tres robots."],
+["green", "There is a mom.", "Hay una mamá."],
+["green", "There are two princesses.", "Hay dos princesas."],
+["green", "There are three robots.", "Hay tres robots."],
+["red", "five", "cinco"],
+["green", "There is a dad.", "Hay un papá."],
+["yellow", "There are four pirates.", "Hay cuatro piratas."],
+["green", "There are four pirates.", "Hay cuatro piratas."],
+["green", "There are three robots.", "Hay tres robots."],
+["yellow", "There are five monsters.", "Hay cinco monstruos."],
+["green", "There are five monsters.", "Hay cinco monstruos."],
+["green", "There are four pirates.", "Hay cuatro piratas."],
+["red", "There are two princesses.", "Hay dos princesas."],
+["green", "There are five monsters.", "Hay cinco monstruos."],
+["green", "There are four pirates.", "Hay cuatro piratas."],
+["red", "There is a prince.", "Hay un príncipe."],
+["green", "There are five monsters.", "Hay cinco monstruos."],
+["red", "There is a mom.", "Hay una mamá."],
+["red", "There are three robots.", "Hay tres robots."],
+["red", "There is a ninja.", "Hay un ninja."],
+["green", "There are four pirates.", "Hay cuatro piratas."],
+["red", "There is a hero.", "Hay un héroe."],
+["green", "There is a dad.", "Hay un papá."],
+["red", "There is an angel.", "Hay un ángel."],
+["red", "There are five monsters.", "Hay cinco monstruos."],
+["red", "There are two babies.", "Hay dos bebés."],
+["green", "There is a mom.", "Hay una mamá."],
+["red", "There are four pirates.", "Hay cuatro piratas."],
+["green", "There is a baby.", "Hay un bebé."],
+["green", "There are two princesses.", "Hay dos princesas."],
+["green", "There are three robots.", "Hay tres robots."],
+["red", "There is a dad.", "Hay un papá."],
+["red", "There are five monsters.", "Hay cinco monstruos."],
+["red", "There is a baby.", "Hay un bebé."],
+["red", "There is a mom.", "Hay una mamá."],
+["red", "There are three robots.", "Hay tres robots."],
+["red", "There are two princesses.", "Hay dos princesas."],
+["red", "There are five monsters.", "Hay cinco monstruos."],
+["red", "There is a dad.", "Hay un papá."],
+["red", "There are four pirates.", "Hay cuatro piratas."]
+];
+
+const numberOfTeams = 5;
+let teamScores = Array.from({length: numberOfTeams}, (_, i) => [i+1, 0]);
+let teamOnDeck = Math.floor(Math.random()*numberOfTeams)+1;
+let index = 0;
+let step = 0;
+let flipped = false;
+let afterFlip = false;
+
+function getPrompt(card) {
+  if(card[0]==="yellow")
+    return "🟡 Slow down! Listen to the teacher and repeat in Spanish.";
+  if(card[0]==="green")
+    return "🟢 Go! Say the sentence as fast as you can before the teacher flips the card over!";
+  if(card[0]==="red")
+    return `🔴 Stop! Team ${teamOnDeck} is up! Check with your teammates before giving the answer in Spanish!`;
+  return "";
+}
+
+function showCard() {
+  document.getElementById("winner").textContent = "";
+  if(index >= lessonOneGame.length) { // Show final scores and winner
+    let out = "Scores:<br>";
+    let winningScore = 0;
+    let winners = [];
+    for(let t=0; t<teamScores.length; t++){
+      out += `Team ${teamScores[t][0]}: ${teamScores[t][1]}<br>`;
+      if(teamScores[t][1] > winningScore) winningScore = teamScores[t][1];
+    }
+    for(let t=0; t<teamScores.length; t++){
+      if(teamScores[t][1] === winningScore && winningScore > 0) winners.push(teamScores[t][0]);
+    }
+    document.getElementById("prompt").textContent = "Game Over!";
+    document.getElementById("flashcard").innerHTML = out;
+    document.getElementById("btns").innerHTML = "";
+    document.getElementById("team-box").textContent = "";
+    document.getElementById("score").textContent = "";
+    document.getElementById("winner").textContent = (winners.length>0) ?
+      ("Congratulations, Team " + winners.join(" & Team ") + "!") :
+      "No teams scored any points this time around! Better luck next time!";
+    return;
+  }
+  let card = lessonOneGame[index];
+  document.getElementById("prompt").textContent = getPrompt(card);
+  document.getElementById("score").textContent = "";
+  document.getElementById("flashcard").textContent = card[1];
+  document.getElementById("winner").textContent = "";
+  flipped = false; afterFlip = false;
+  document.getElementById("team-box").textContent = (card[0]==="red") ? `(Team on Deck: ${teamOnDeck})` : "";
+
+  // Build button group
+  let btns = '';
+  if(card[0]==="yellow" || card[0]==="green") {
+    btns += `<button class="action-btn" onclick="flipCard()">Flip Card</button>`;
+    btns += `<button class="action-btn" onclick="exitGame()">Exit</button>`;
+  } else if(card[0]==="red") {
+    btns += `<button class="action-btn" onclick="flipCard()">Flip Card</button>`;
+    btns += `<button class="action-btn" onclick="exitGame()">Exit</button>`;
+  }
+  document.getElementById("btns").innerHTML = btns;
+}
+
+function flipCard() {
+  if(index >= lessonOneGame.length) return;
+  let card = lessonOneGame[index];
+  if(flipped) return;
+  document.getElementById("flashcard").textContent = card[2];
+  flipped = true;
+  if(card[0]==="red") {
+    document.getElementById("btns").innerHTML =
+      `<button class="action-btn" onclick="scoreRed('C')">Correct</button>
+       <button class="action-btn" onclick="scoreRed('I')">Incorrect</button>
+       <button class="action-btn" onclick="exitGame()">Exit</button>`;
+  } else {
+    document.getElementById("btns").innerHTML =
+      `<button class="action-btn" onclick="nextCard()">Next Card</button>
+       <button class="action-btn" onclick="exitGame()">Exit</button>`;
+  }
+}
+
+function scoreRed(res) {
+  if(index >= lessonOneGame.length) return;
+  if(res==="C") {
+    for(let t=0; t<teamScores.length; t++) {
+      if(teamScores[t][0]===teamOnDeck) teamScores[t][1] += 1;
+    }
+    document.getElementById("score").textContent = `Good job, Team ${teamOnDeck}!`;
+  } else if(res==="I") {
+    document.getElementById("score").textContent = "Good try! You'll get it next time I bet!";
+  }
+  // Choose a new random team for next red card
+  teamOnDeck = Math.floor(Math.random()*numberOfTeams)+1;
+  setTimeout(nextCard, 1100);
+}
+
+function nextCard() {
+  index++;
+  showCard();
+}
+
+function exitGame() {
+  document.getElementById("prompt").textContent = "You are exiting the program.";
+  document.getElementById("flashcard").textContent = "Please reopen the RedLightGreenLight program if you’d like to play again.";
+  document.getElementById("btns").innerHTML = "";
+  document.getElementById("score").textContent = "";
+  document.getElementById("team-box").textContent = "";
+  document.getElementById("winner").textContent = "";
+}
+
+// Initialize first card
+showCard();
+
+</script>
+</body>
+</html>
